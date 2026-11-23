@@ -1,0 +1,20 @@
+name: Bash Script CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.sh'
+  workflow_dispatch:
+
+jobs:
+  ci-bash:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck on *.sh files
+        run: |
+          find . -type f -name '*.sh' -not -path './.git/*' -print0 | xargs -0 -r shellcheck
