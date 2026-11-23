@@ -1,0 +1,60 @@
+name: HTML CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  ci-html:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate HTML syntax
+        uses: Cyb3r-Jak3/html5validator-action@v7.0.2
+        with:
+          root: .
+
+  cd-deploy:
+    needs: ci-html
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Prepare static site
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
